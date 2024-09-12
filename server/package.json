@@ -1,0 +1,21 @@
+{
+  "name": "chatreg_server",
+  "version": "1.0.0",
+  "description": "chatbot ticket register backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kavan",
+  "license": "ISC",
+  "dependencies": {
+    "chatreg_server": "file:",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "mongoose": "^8.6.2",
+    "nodemon": "^3.1.4",
+    "uui": "^1.0.7",
+    "uuid": "^10.0.0"
+  }
+}
