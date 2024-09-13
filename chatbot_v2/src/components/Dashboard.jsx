@@ -30,7 +30,7 @@ const Dashboard = () => {
                 title={event.name}
                 value={
                   <>
-                    <img src={event.imageUrl} alt={event.name} className="w-full h-32 object-cover" />
+                    <img src={event.imageUrl} alt={event.name} className="w-full h-32 object-cover rounded-lg" />
                     <div>Venue: {event.venue}</div>
                     <div>Date: {new Date(event.date).toLocaleDateString()}</div>
                     <div>Time: {event.timeSlot}</div>
