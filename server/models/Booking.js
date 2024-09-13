@@ -2,11 +2,24 @@
 const mongoose = require("mongoose");
 
 const BookingSchema = new mongoose.Schema({
-  adults: { type: Number, required: true },
-  children: { type: Number, required: true },
-  date: { type: String, required: true },
-  timeSlot: { type: String, required: true },
-  exhibition: { type: String, required: true },
+  adults: { 
+    type: String, 
+    required: true 
+  },
+  children: {
+     type: String, 
+     required: true 
+    },
+  date: { 
+    type: Date, 
+    required: true 
+  },
+  timeSlot: { 
+    type: String, required: true 
+  },
+  exhibition: {
+     type: String, required: true 
+    },
 });
 
 const Booking = mongoose.model("Booking", BookingSchema);

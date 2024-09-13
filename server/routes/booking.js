@@ -6,28 +6,20 @@ const router = express.Router();
 
 // POST route to create a new booking
 router.post("/create", async (req, res) => {
-  try {
+  
     const { adults, children, date, timeSlot, exhibition } = req.body;
 
-    // Create new booking
-    const newBooking = new Booking({
-      adults,
-      children,
-      date,
-      timeSlot,
-      exhibition,
-    });
-
-    // Save the booking to MongoDB
-    await newBooking.save();
-
-    // Respond with success
-    res
-      .status(201)
-      .json({ message: "Booking created successfully", booking: newBooking });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to create booking", error });
+   
+  try {
+    const newBooking = await Booking.create(req.body);
+    console.log(newBooking)
+    res.status(201).json(newBooking);
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: err.message });
   }
+
+
 });
 
 module.exports = router;

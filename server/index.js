@@ -2,14 +2,14 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const User = require('./models/User')
+const bodyParser = require("body-parser");
 const Event = require('./models/Event')
+const Booking = require('./models/Booking')
 
 const app = express()
 app.use(express.json())
 app.use(cors())
-
 const uri = "mongodb://localhost:27017/chatbot_v1";
-
 const connectDB = async () => {
   try {
     await mongoose.connect(uri, {
@@ -23,6 +23,19 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+
+const PORT = process.env.PORT || 3001;
+
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+});
+
+
+
+
+
 
 
 //register api
@@ -103,10 +116,19 @@ app.post('/events', async (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3001;
+app.post("/createBooking", async (req, res) => {
+  
+  const { adults, children, date, timeSlot, exhibition } = req.body;
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+ 
+try {
+  const newBooking = await Booking.create(req.body);
+  console.log(newBooking)
+  res.status(201).json(newBooking);
+} catch (err) {
+  console.error('Registration error:', err);
+  res.status(500).json({ error: err.message });
+}
+
+
 });
