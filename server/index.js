@@ -95,7 +95,7 @@ app.post('/events', async (req, res) => {
 
 
   const { imageUrl, name, venue, date, timeSlot, description } = req.body;
-  
+  //hi
   // const newEvent = new Event({
   //   imageUrl,
   //   name,
