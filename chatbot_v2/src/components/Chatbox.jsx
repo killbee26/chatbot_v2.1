@@ -11,41 +11,74 @@ const Chatbox = () => {
   const [showDateButtons, setShowDateButtons] = useState(false);
   const [showTimeButtons, setShowTimeButtons] = useState(false);
   const [showConfirmationButtons, setShowConfirmationButtons] = useState(false);
+  const [conversationStep, setConversationStep] = useState(0); // Track the conversation step
 
   const sendMessage = async (message) => {
     const userMessage = { sender: "user", text: message || input };
     setMessages([...messages, userMessage]);
     setInput("");
 
-    // Logic for handling conversation flow
+    // Logic for handling conversation flow based on conversation step
     let botResponse = "";
 
-    if (message || input.toLowerCase().includes("book")) {
-      botResponse = "On what date would you like to visit the museum?";
-      setShowDateButtons(true); // Show date options
-    } else if (message || input.match(/\d{4}-\d{2}-\d{2}/)) {
-      botResponse =
-        "Here are the available slots: 10 AM - 12 PM, 1 PM - 3 PM, 4 PM - 6 PM.";
-      setShowTimeButtons(true); // Show time options
-    } else if (
-      message ||
-      input.toLowerCase().includes("am") ||
-      input.toLowerCase().includes("pm")
-    ) {
-      botResponse = "How many people? Adults and children?";
-      setShowConfirmationButtons(true); // Show yes/no for events
-    } else if (message || input.match(/\d+/)) {
-      botResponse =
-        "There is an art exhibition on your selected date. Would you like to book for that as well? (yes/no)";
-    } else if (
-      message ||
-      input.toLowerCase() === "yes" ||
-      input.toLowerCase() === "no"
-    ) {
-      botResponse = "Please proceed to payment to complete your booking.";
-    } else {
-      botResponse =
-        "Sorry, I didn't understand that. Could you please clarify?";
+    switch (conversationStep) {
+      case 0: // Initial step
+        if (message || input.toLowerCase().includes("book")) {
+          botResponse = "On what date would you like to visit the museum?";
+          setShowDateButtons(true); // Show date options
+          setShowTimeButtons(false);
+          setShowConfirmationButtons(false);
+          setConversationStep(1); // Move to date selection step
+        } else {
+          botResponse = "Sorry, I didn't understand that. Could you please clarify?";
+        }
+        break;
+
+      case 1: // Date selection step
+        if (message || input.match(/\d{4}-\d{2}-\d{2}/)) {
+          botResponse =
+            "Here are the available slots: 10 AM - 12 PM, 1 PM - 3 PM, 4 PM - 6 PM.";
+          setShowDateButtons(false);
+          setShowTimeButtons(true); // Show time options
+          setConversationStep(2); // Move to time selection step
+        } else {
+          botResponse = "Please select a valid date.";
+        }
+        break;
+
+      case 2: // Time slot selection step
+        if (message || input.toLowerCase().includes("am") || input.toLowerCase().includes("pm")) {
+          botResponse = "How many people? Adults and children?";
+          setShowTimeButtons(false);
+          setShowConfirmationButtons(false);
+          setConversationStep(3); // Move to people count step
+        } else {
+          botResponse = "Please select a valid time slot.";
+        }
+        break;
+
+      case 3: // People count step
+        if (message || input.match(/\d+/)) {
+          botResponse = "There is an art exhibition on your selected date. Would you like to book for that as well? (yes/no)";
+          setShowConfirmationButtons(true); // Show yes/no for event confirmation
+          setConversationStep(4); // Move to yes/no confirmation step
+        } else {
+          botResponse = "Please provide a valid number of people.";
+        }
+        break;
+
+      case 4: // Yes/No confirmation step
+        if (message || input.toLowerCase() === "yes" || input.toLowerCase() === "no") {
+          botResponse = "Please proceed to payment to complete your booking.";
+          setShowConfirmationButtons(false);
+          setConversationStep(0); // Reset the conversation step
+        } else {
+          botResponse = "Please respond with yes or no.";
+        }
+        break;
+
+      default:
+        botResponse = "Sorry, I didn't understand that. Could you please clarify?";
     }
 
     // Update messages with bot response
@@ -53,11 +86,6 @@ const Chatbox = () => {
       ...prevMessages,
       { sender: "bot", text: botResponse },
     ]);
-
-    // Reset button visibility
-    setShowDateButtons(false);
-    setShowTimeButtons(false);
-    setShowConfirmationButtons(false);
   };
 
   return (
