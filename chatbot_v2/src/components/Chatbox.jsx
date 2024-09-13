@@ -8,31 +8,56 @@ const Chatbox = () => {
     { sender: "bot", text: "Hey there! How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
+  const [showDateButtons, setShowDateButtons] = useState(false);
+  const [showTimeButtons, setShowTimeButtons] = useState(false);
+  const [showConfirmationButtons, setShowConfirmationButtons] = useState(false);
 
-  const sendMessage = async () => {
-    if (input.trim() === "") return;
-
-    const userMessage = { sender: "user", text: input };
+  const sendMessage = async (message) => {
+    const userMessage = { sender: "user", text: message || input };
     setMessages([...messages, userMessage]);
     setInput("");
 
-    // Send user message to Rasa chatbot
-    try {
-      const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sender: "user", message: input }),
-      });
+    // Logic for handling conversation flow
+    let botResponse = "";
 
-      const botMessages = await response.json();
-      botMessages.forEach((message) => {
-        setMessages((prevMessages) => [...prevMessages, { sender: "bot", text: message.text }]);
-      });
-    } catch (error) {
-      console.error("Error sending message to Rasa:", error);
+    if (message || input.toLowerCase().includes("book")) {
+      botResponse = "On what date would you like to visit the museum?";
+      setShowDateButtons(true); // Show date options
+    } else if (message || input.match(/\d{4}-\d{2}-\d{2}/)) {
+      botResponse =
+        "Here are the available slots: 10 AM - 12 PM, 1 PM - 3 PM, 4 PM - 6 PM.";
+      setShowTimeButtons(true); // Show time options
+    } else if (
+      message ||
+      input.toLowerCase().includes("am") ||
+      input.toLowerCase().includes("pm")
+    ) {
+      botResponse = "How many people? Adults and children?";
+      setShowConfirmationButtons(true); // Show yes/no for events
+    } else if (message || input.match(/\d+/)) {
+      botResponse =
+        "There is an art exhibition on your selected date. Would you like to book for that as well? (yes/no)";
+    } else if (
+      message ||
+      input.toLowerCase() === "yes" ||
+      input.toLowerCase() === "no"
+    ) {
+      botResponse = "Please proceed to payment to complete your booking.";
+    } else {
+      botResponse =
+        "Sorry, I didn't understand that. Could you please clarify?";
     }
+
+    // Update messages with bot response
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "bot", text: botResponse },
+    ]);
+
+    // Reset button visibility
+    setShowDateButtons(false);
+    setShowTimeButtons(false);
+    setShowConfirmationButtons(false);
   };
 
   return (
@@ -40,7 +65,12 @@ const Chatbox = () => {
       <div className="flex-1 overflow-auto p-4 h-[550px]">
         <div className="flex flex-col gap-4">
           {messages.map((message, index) => (
-            <div key={index} className={`flex ${message.sender === "user" ? "justify-end" : ""} items-start gap-3`}>
+            <div
+              key={index}
+              className={`flex ${
+                message.sender === "user" ? "justify-end" : ""
+              } items-start gap-3`}
+            >
               {message.sender === "bot" && (
                 <Avatar className="w-8 h-8 shrink-0">
                   <AvatarImage src="/bot-avatar.jpg" alt="Bot Avatar" />
@@ -49,7 +79,9 @@ const Chatbox = () => {
               )}
               <div
                 className={`${
-                  message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                  message.sender === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
                 } rounded-lg p-3 max-w-[70%]`}
               >
                 <p className="text-sm">{message.text}</p>
@@ -76,13 +108,47 @@ const Chatbox = () => {
           <Button
             type="button"
             size="icon"
-            onClick={sendMessage}
+            onClick={() => sendMessage(input)}
             className="absolute w-8 h-8 top-3 right-3"
           >
             <SendIcon className="w-4 h-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>
+
+        {/* Buttons for Date Selection */}
+        {showDateButtons && (
+          <div className="flex gap-2 mt-2">
+            <Button onClick={() => sendMessage("Today")}>Today</Button>
+            <Button onClick={() => sendMessage("Tomorrow")}>Tomorrow</Button>
+            <Button onClick={() => sendMessage("2024-09-15")}>
+              2024-09-15
+            </Button>
+          </div>
+        )}
+
+        {/* Buttons for Time Slot Selection */}
+        {showTimeButtons && (
+          <div className="flex gap-2 mt-2">
+            <Button onClick={() => sendMessage("10 AM - 12 PM")}>
+              10 AM - 12 PM
+            </Button>
+            <Button onClick={() => sendMessage("1 PM - 3 PM")}>
+              1 PM - 3 PM
+            </Button>
+            <Button onClick={() => sendMessage("4 PM - 6 PM")}>
+              4 PM - 6 PM
+            </Button>
+          </div>
+        )}
+
+        {/* Yes/No Confirmation Buttons */}
+        {showConfirmationButtons && (
+          <div className="flex gap-2 mt-2">
+            <Button onClick={() => sendMessage("Yes")}>Yes</Button>
+            <Button onClick={() => sendMessage("No")}>No</Button>
+          </div>
+        )}
       </div>
     </div>
   );
