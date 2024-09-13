@@ -2,6 +2,7 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const User = require('./models/User')
+const Event = require('./models/Event')
 
 const app = express()
 app.use(express.json())
@@ -64,7 +65,42 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Endpoint to fetch events
+app.get('/events', async (req, res) => {
+  try {
+    const events = await Event.find();
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
+// Optional: Endpoint to create a new event (for testing purposes)
+app.post('/events', async (req, res) => {
+
+
+
+
+  const { imageUrl, name, venue, date, timeSlot, description } = req.body;
+  
+  // const newEvent = new Event({
+  //   imageUrl,
+  //   name,
+  //   venue,
+  //   date,
+  //   timeSlot,
+  //   description,
+  // });
+
+  try {
+    const newEvent = await Event.create(req.body);
+    console.log(newEvent)
+    res.status(201).json(newEvent);
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 const PORT = process.env.PORT || 3001;

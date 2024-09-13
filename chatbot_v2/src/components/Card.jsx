@@ -5,7 +5,7 @@ const Card = ({ title, value, icon }) => (
         {icon}
       </div>
       <div className="card-content">
-        <div className="text-4xl font-bold text-black">{value}</div>
+        <div className="text-2xl font-bold text-black">{value}</div>
         <p className="text-xs text-muted-foreground">+20% from last month</p>
       </div>
     </div>
