@@ -118,7 +118,7 @@ app.post('/events', async (req, res) => {
 
 app.post("/createBooking", async (req, res) => {
   
-  const { adults, children, date, timeSlot, exhibition } = req.body;
+  const { adults, children, date, timeSlot, event } = req.body;
 
  
 try {
