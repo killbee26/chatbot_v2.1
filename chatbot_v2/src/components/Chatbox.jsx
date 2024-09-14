@@ -8,7 +8,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // Assuming you're using some UI library for dropdown
+} from "@/components/ui/select";
 
 const Chatbox = () => {
   const [messages, setMessages] = useState([
@@ -18,45 +18,55 @@ const Chatbox = () => {
   const [showDateButtons, setShowDateButtons] = useState(false);
   const [showTimeButtons, setShowTimeButtons] = useState(false);
   const [showConfirmationButtons, setShowConfirmationButtons] = useState(false);
-  const [conversationStep, setConversationStep] = useState(0); // Track the conversation step
-  const [adults, setAdults] = useState(0); // Keep track of adults selected
-  const [children, setChildren] = useState(0); // Keep track of children selected
+  const [showEventButtons, setShowEventButtons] = useState(false); // Add state for event buttons
+  const [conversationStep, setConversationStep] = useState(0);
+  const [adults, setAdults] = useState(0);
+  const [children, setChildren] = useState(0);
+  const [selectedEvents, setSelectedEvents] = useState([]); // Track selected events
 
   const sendMessage = async (message) => {
     const userMessage = { sender: "user", text: message || input };
     setMessages([...messages, userMessage]);
     setInput("");
 
-    // Logic for handling conversation flow based on conversation step
     let botResponse = "";
 
     switch (conversationStep) {
-      case 0: // Initial step
+      case 0:
         if (message || input.toLowerCase().includes("book")) {
           botResponse = "On what date would you like to visit the museum?";
-          setShowDateButtons(true); // Show date options
+          setShowDateButtons(true);
           setShowTimeButtons(false);
           setShowConfirmationButtons(false);
-          setConversationStep(1); // Move to date selection step
+          setShowEventButtons(false); // Hide event buttons
+          setConversationStep(1);
         } else {
           botResponse =
             "Sorry, I didn't understand that. Could you please clarify?";
         }
         break;
 
-      case 1: // Date selection step
+      case 1:
         if (message || input.match(/\d{4}-\d{2}-\d{2}/)) {
-          botResponse =
-            "Here are the available slots: 10 AM - 12 PM, 1 PM - 3 PM, 4 PM - 6 PM.";
+          botResponse = "Here are the available events on your selected date:";
           setShowDateButtons(false);
-          setShowTimeButtons(true); // Show time options
-          setConversationStep(2); // Move to time selection step
+          setShowEventButtons(true); // Show event buttons
+          setShowTimeButtons(false);
+          setShowConfirmationButtons(false);
+          setConversationStep(2); // Move to event selection step
         } else {
           botResponse = "Please select a valid date.";
         }
         break;
 
-      case 2: // Time slot selection step
+      case 2: // Event selection step
+        botResponse = "Now, please select a time slot:";
+        setShowEventButtons(false); // Hide event buttons
+        setShowTimeButtons(true); // Show time options
+        setConversationStep(3); // Move to time slot selection step
+        break;
+
+      case 3:
         if (
           message ||
           input.toLowerCase().includes("am") ||
@@ -64,25 +74,25 @@ const Chatbox = () => {
         ) {
           botResponse = "How many people? Adults and children?";
           setShowTimeButtons(false);
-          setConversationStep(3); // Move to people count step
+          setConversationStep(4); // Move to people count step
         } else {
           botResponse = "Please select a valid time slot.";
         }
         break;
 
-      case 3: // People count step
+      case 4:
         if (adults >= 0 && children >= 0) {
           botResponse =
             `You selected ${adults} adult(s) and ${children} child(ren). ` +
-            "There is an art exhibition on your selected date. Would you like to book for that as well? (yes/no)";
-          setShowConfirmationButtons(true); // Show yes/no for event confirmation
-          setConversationStep(4); // Move to yes/no confirmation step
+            "Would you like to confirm your booking for these events? (yes/no)";
+          setShowConfirmationButtons(true);
+          setConversationStep(5); // Move to yes/no confirmation step
         } else {
           botResponse = "Please select the number of adults and children.";
         }
         break;
 
-      case 4: // Yes/No confirmation step
+      case 5:
         if (
           message ||
           input.toLowerCase() === "yes" ||
@@ -101,21 +111,25 @@ const Chatbox = () => {
           "Sorry, I didn't understand that. Could you please clarify?";
     }
 
-    // Update messages with bot response
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: "bot", text: botResponse },
     ]);
   };
 
+  const handleEventSelection = (event) => {
+    setSelectedEvents((prev) =>
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]
+    );
+  };
+
   const handleSubmit = async () => {
     const bookingData = {
       adults,
       children,
-      // Add any other details you need to send (e.g., selectedDate, selectedTimeSlot)
+      events: selectedEvents,
     };
 
-    // Send POST request to backend to save booking data
     try {
       const response = await fetch(
         "http://localhost:5000/api/bookings/create",
@@ -130,8 +144,11 @@ const Chatbox = () => {
       const data = await response.json();
       console.log("Booking created:", data);
 
-      // Send the message with the selected values
-      sendMessage(`Booking for ${adults} adults and ${children} children.`);
+      sendMessage(
+        `Booking for ${adults} adults and ${children} children with events: ${selectedEvents.join(
+          ", "
+        )}.`
+      );
     } catch (error) {
       console.error("Error creating booking:", error);
     }
@@ -203,6 +220,51 @@ const Chatbox = () => {
             </Button>
           </div>
         )}
+        {/* Buttons for Event Selection */}
+        {showEventButtons && (
+          <div className="flex flex-col gap-2 mt-2">
+            <Button
+              onClick={() => handleEventSelection("Art Exhibition")}
+              className={`${
+                selectedEvents.includes("Art Exhibition")
+                  ? "bg-primary text-primary-foreground"
+                  : ""
+              }`}
+            >
+              Art Exhibition
+            </Button>
+            <Button
+              onClick={() => handleEventSelection("Workshops")}
+              className={`${
+                selectedEvents.includes("Workshops")
+                  ? "bg-primary text-primary-foreground"
+                  : ""
+              }`}
+            >
+              Workshops
+            </Button>
+            <Button
+              onClick={() => handleEventSelection("Guided Tours")}
+              className={`${
+                selectedEvents.includes("Guided Tours")
+                  ? "bg-primary text-primary-foreground"
+                  : ""
+              }`}
+            >
+              Guided Tours
+            </Button>
+
+            {/* Submit Button for Selected Events */}
+            <Button
+              onClick={() =>
+                sendMessage(`You selected: ${selectedEvents.join(", ")}`)
+              }
+              className="mt-4"
+            >
+              Submit
+            </Button>
+          </div>
+        )}
 
         {/* Buttons for Time Slot Selection */}
         {showTimeButtons && (
@@ -219,7 +281,7 @@ const Chatbox = () => {
           </div>
         )}
         {/* Dropdown for People Count Selection */}
-        {conversationStep === 3 && (
+        {conversationStep === 4 && (
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex items-center gap-2">
               <label>Adults: </label>
@@ -259,7 +321,15 @@ const Chatbox = () => {
               </Select>
             </div>
 
-            <Button className="mt-4" onClick={handleSubmit}>
+            {/* Submit Button for People Count */}
+            <Button
+              className="mt-4"
+              onClick={() =>
+                sendMessage(
+                  `You selected ${adults} adult(s) and ${children} child(ren).`
+                )
+              }
+            >
               Submit
             </Button>
           </div>

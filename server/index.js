@@ -33,11 +33,6 @@ connectDB().then(() => {
 });
 
 
-
-
-
-
-
 //register api
 app.post('/register', async (req, res) => {
   try {
